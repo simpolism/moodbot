@@ -10,6 +10,14 @@ async def on_message(message):
     if message.author == client.user:
         return
 
+    # delete messages <200 char in messages
+    if message.channel.id == 396014169784057858:
+        if len(message.content) < 200:
+            try:
+                await client.delete_message(message)
+            except discord.Forbidden:
+                print "ERROR: not permissioned to delete message"
+    
     if message.content.startswith('!hello'):
         msg = 'Hello {0.author.mention}'.format(message)
         await client.send_message(message.channel, msg)
