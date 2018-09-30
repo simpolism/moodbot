@@ -1,34 +1,65 @@
 #!/usr/bin/env python3.6
 
-# Work with Python 3.6
+import argparse
+import logging
+import sys
+
 import discord
+
 from secrets import TOKEN
 
-client = discord.Client()
+PARSER = argparse.ArgumentParser()
+PARSER.add_argument("-d", "--debug", action="store_true",
+                    help="enable additional debug logging")
+PARSER.add_argument("-l", "--logfile", type=str,
+                    help="file to write log output")
+ARGS = PARSER.parse_args()
 
-@client.event
+CLIENT = discord.Client()
+CHANNEL_IDS = {
+    "396014169784057858" : "MEMOS"
+}
+
+FORMATTER = "%(asctime)s %(filename)s:%(lineno)d %(levelname)s %(message)s"
+if ARGS.logfile and ARGS.logfile != "-":
+    logging.basicConfig(filename=ARGS.logfile, format=FORMATTER)
+else:
+    logging.basicConfig(stream=sys.stdout, format=FORMATTER)
+
+LOGGER = logging.getLogger('moodbot')
+if ARGS.debug:
+    LOGGER.setLevel(logging.DEBUG)
+else:
+    LOGGER.setLevel(logging.INFO)
+
+@CLIENT.event
 async def on_message(message):
     # we do not want the bot to reply to itself
-    if message.author == client.user:
+    if message.author == CLIENT.user:
         return
 
     # delete messages <280 char in messages
-    if message.channel.id == "396014169784057858":
+    if CHANNEL_IDS[message.channel.id] == "MEMOS":
         if len(message.content) < 280:
             try:
-                await client.delete_message(message)
+                LOGGER.debug("Deleting message: {}: {}".format(message.author.name,
+                                                               message.content))
+                await CLIENT.delete_message(message)
             except discord.Forbidden:
-                print("ERROR: not permissioned to delete message")
+                LOGGER.error("ERROR: not permissioned to delete message")
     
     if message.content.startswith('!hello'):
         msg = 'Hello {0.author.mention}'.format(message)
-        await client.send_message(message.channel, msg)
+        await CLIENT.send_message(message.channel, msg)
 
-@client.event
+@CLIENT.event
 async def on_ready():
-    print('Logged in as')
-    print(client.user.name)
-    print(client.user.id)
-    print('------')
+    LOGGER.info('Logged in as: {} / {}'.format(CLIENT.user.name, CLIENT.user.id))
 
-client.run(TOKEN)
+def main():
+    LOGGER.info('Starting moodbot!')
+    CLIENT.run(TOKEN)
+    return 0
+
+if __name__ == "__main__":
+    sys.exit(main())
