@@ -1,3 +1,5 @@
+#!/usr/bin/env python3.6
+
 # Work with Python 3.6
 import discord
 from secrets import TOKEN
