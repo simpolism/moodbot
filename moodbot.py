@@ -16,9 +16,6 @@ PARSER.add_argument("-l", "--logfile", type=str,
 ARGS = PARSER.parse_args()
 
 CLIENT = discord.Client()
-CHANNEL_IDS = {
-    "396014169784057858" : "MEMOS"
-}
 
 FORMATTER = "%(asctime)s %(filename)s:%(lineno)d %(levelname)s %(message)s"
 if ARGS.logfile and ARGS.logfile != "-":
@@ -38,19 +35,20 @@ async def on_message(message):
     if message.author == CLIENT.user:
         return
 
-    # delete messages <280 char in messages
-    if CHANNEL_IDS[message.channel.id] == "MEMOS":
+    #LOGGER.debug("GOT MESSAGE in CH {0.channel.id}: {0.author.name}: {0.content}".format(message))
+    # delete messages <280 char in memos channel
+    if message.channel.id == "396014169784057858":
+        LOGGER.debug("GOT MESSAGE IN MEMOS: {0.content}".format(message))
         if len(message.content) < 280:
             try:
-                LOGGER.debug("Deleting message: {}: {}".format(message.author.name,
-                                                               message.content))
+                LOGGER.debug("Deleting message: {0.author.name}: {0.content}".format(message))
                 await CLIENT.delete_message(message)
             except discord.Forbidden:
                 LOGGER.error("ERROR: not permissioned to delete message")
-    
-    if message.content.startswith('!hello'):
-        msg = 'Hello {0.author.mention}'.format(message)
-        await CLIENT.send_message(message.channel, msg)
+    else:
+        if message.content.startswith("!hello"):
+            msg = "Hello {0.author.mention}".format(message)
+            await CLIENT.send_message(message.channel, msg)
 
 @CLIENT.event
 async def on_ready():
