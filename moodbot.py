@@ -1,6 +1,7 @@
 #!/usr/bin/env python3.6
 
 import argparse
+import datetime
 import logging
 import sys
 
@@ -33,6 +34,10 @@ else:
 
 @CLIENT.event
 async def on_message(message):
+    # don't take messages if running selfie job
+    if ARGS.selfie:
+        return
+
     # we do not want the bot to reply to itself
     if message.author == CLIENT.user:
         return
@@ -52,11 +57,27 @@ async def on_message(message):
             msg = "Hello {0.author.mention}".format(message)
             await CLIENT.send_message(message.channel, msg)
 
+async def purge_selfies():
+    selfie_channel = CLIENT.get_channel("500745462337241125")
+    if not selfie_channel:
+        LOGGER.error("Could not find selfie channel!")
+        return -1
+    dt = datetime.utcnow() - datetime.timedelta(weeks=1)
+    limit = 10000
+    while True:
+        LOGGER.info('Running selfie purge job!')
+        purged = await CLIENT.purge_from(selfie_channel, limit=limit, before=dt)
+        if len(purged) < limit:
+            LOGGER.info("Purged {} messages, finished!".format(len(purged)))
+            return 0
+        else:
+            LOGGER.info("Purged {} messages, doing another round!".format(len(purged)))
+
 @CLIENT.event
 async def on_ready():
     LOGGER.info('Logged in as: {} / {}'.format(CLIENT.user.name, CLIENT.user.id))
     if ARGS.selfie:
-        LOGGER.info('Running selfie job!')
+        sys.exit(await purge_selfies())
 
 def main():
     LOGGER.info('Starting moodbot!')
