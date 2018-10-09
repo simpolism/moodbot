@@ -13,6 +13,8 @@ PARSER.add_argument("-d", "--debug", action="store_true",
                     help="enable additional debug logging")
 PARSER.add_argument("-l", "--logfile", type=str,
                     help="file to write log output")
+PARSER.add_argument("-S", "--selfie", action="store_true",
+                    help="run job to clear any selfie channel messages older than 7 days")
 ARGS = PARSER.parse_args()
 
 CLIENT = discord.Client()
@@ -53,6 +55,8 @@ async def on_message(message):
 @CLIENT.event
 async def on_ready():
     LOGGER.info('Logged in as: {} / {}'.format(CLIENT.user.name, CLIENT.user.id))
+    if ARGS.selfie:
+        LOGGER.info('Running selfie job!')
 
 def main():
     LOGGER.info('Starting moodbot!')
