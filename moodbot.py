@@ -49,6 +49,7 @@ async def on_message(message):
         LOGGER.debug("GOT MESSAGE IN MEMOS: {0.content}".format(message))
         if len(message.content) < 280:
             try:
+                await asyncio.sleep(0.2)
                 LOGGER.debug("Deleting message: {0.author.name}: {0.content}".format(message))
                 await CLIENT.delete_message(message)
             except discord.Forbidden:
