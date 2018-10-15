@@ -1,6 +1,7 @@
 #!/usr/bin/env python3.6
 
 import argparse
+import asyncio
 import datetime
 import logging
 import sys
@@ -61,15 +62,17 @@ async def purge_selfies():
     selfie_channel = CLIENT.get_channel("500745462337241125")
     if not selfie_channel:
         LOGGER.error("Could not find selfie channel!")
-        return -1
-    dt = datetime.utcnow() - datetime.timedelta(weeks=1)
+        return
+    now_dt = datetime.datetime.utcnow()
+    start_dt = now_dt - datetime.timedelta(weeks=1)
+    end_dt = now_dt - datetime.timedelta(weeks=2)
     limit = 10000
     while True:
         LOGGER.info('Running selfie purge job!')
-        purged = await CLIENT.purge_from(selfie_channel, limit=limit, before=dt)
+        purged = await CLIENT.purge_from(selfie_channel, limit=limit, before=start_dt, after=end_dt)
         if len(purged) < limit:
             LOGGER.info("Purged {} messages, finished!".format(len(purged)))
-            return 0
+            break
         else:
             LOGGER.info("Purged {} messages, doing another round!".format(len(purged)))
 
@@ -77,7 +80,8 @@ async def purge_selfies():
 async def on_ready():
     LOGGER.info('Logged in as: {} / {}'.format(CLIENT.user.name, CLIENT.user.id))
     if ARGS.selfie:
-        sys.exit(await purge_selfies())
+        await purge_selfies()
+        await CLIENT.close()
 
 def main():
     LOGGER.info('Starting moodbot!')
