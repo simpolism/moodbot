@@ -67,6 +67,7 @@ async def purge_selfies():
     start_dt = now_dt - datetime.timedelta(weeks=1)
     end_dt = now_dt - datetime.timedelta(weeks=2)
     limit = 10000
+    await CLIENT.send_message(selfie_channel, "Purging selfies older than {}!".format(str(start_dt)))
     while True:
         LOGGER.info('Running selfie purge job!')
         purged = await CLIENT.purge_from(selfie_channel, limit=limit, before=start_dt, after=end_dt)
